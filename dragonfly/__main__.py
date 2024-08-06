@@ -25,6 +25,8 @@ import os
 import re
 import sys
 import time
+import yaml
+
 
 import six
 
@@ -54,6 +56,12 @@ def _setup_logging(args):
 def _init_engine(args):
     # Retrieve the engine option pairs from the arguments.
     options = {}
+    if (p := args.engine_options_file):
+        try:
+            with open(p, "r") as f:
+                options.update(yaml.safe_load(f))
+        except Exception as ex:
+            LOG.error(ex)
     for argument in args.engine_options:
         for options_list in argument:
             for option, value in options_list:
@@ -370,6 +378,15 @@ def make_arg_parser():
              "otherwise as strings."
     )
 
+    engine_options_file_argument = _build_argument(
+        "--engine-options-file", default="", type=str,
+        help="Filename (in json) containing one or more engine options to be passed to *get_engine()*. "
+             "Each option should specify a key word argument and value. "
+             "Multiple options should be separated by spaces or commas. "
+             "Values are treated as Python literals if possible, "
+             "otherwise as strings."
+    )
+
     language_argument = _build_argument(
         "--language", default="en",
         help="Speaker language to use. Only applies if using an engine "
@@ -411,8 +428,8 @@ def make_arg_parser():
     _add_arguments(
         parser_test,
         cmd_module_files_argument, engine_argument, engine_options_argument,
-        language_argument, no_input_argument, delay_argument,
-        log_level_argument, quiet_argument
+        engine_options_file_argument, language_argument, no_input_argument,
+        delay_argument, log_level_argument, quiet_argument
     )
 
     # Define common arguments for the "load" and "load-directory" commands.
@@ -433,7 +450,7 @@ def make_arg_parser():
     )
     _add_arguments(
         parser_load,
-        cmd_module_files_argument, engine_argument, engine_options_argument,
+        cmd_module_files_argument, engine_argument, engine_options_file_argument, engine_options_argument,
         language_argument, no_input_argument, no_recobs_messages_argument,
         log_level_argument, quiet_argument
     )
@@ -457,7 +474,7 @@ def make_arg_parser():
     _add_arguments(
         parser_load_directory,
         module_dirs_argument, recursive_argument, engine_argument,
-        engine_options_argument, language_argument, no_input_argument,
+        engine_options_argument, engine_options_file_argument, language_argument, no_input_argument,
         no_recobs_messages_argument, log_level_argument, quiet_argument
     )
 
