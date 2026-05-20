@@ -378,6 +378,8 @@ class WordParserDns11(WordParserBase):
             flags = self.property_map["left-*"].clone()
         elif property.startswith("right-"):
             flags = self.property_map["right-*"].clone()
+        elif property.endswith("hyphen"):
+            flags = self.property_map["hyphen"].clone()
         else:
             self._log.warning("Unknown word property: %r", property)
             flags = WordFlags()
